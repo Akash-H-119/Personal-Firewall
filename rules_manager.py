@@ -2,6 +2,15 @@ import json
 import uuid
 from typing import List, Dict
 
+# rules_manager.py
+
+# Example rules list
+rules = [
+    {"ip": "192.168.1.10", "port": 80, "protocol": "TCP"},
+    {"ip": "10.0.0.5", "port": 53, "protocol": "UDP"},
+    # Add more rules here
+]
+
 RULES_FILE = "rules.json"
 
 def load_rules() -> List[Dict]:
