@@ -34,6 +34,15 @@ def remove_rule(rule_id: str) -> bool:
     return True
 
 def match_block(packet_info):
+    # rules_manager.py
+
+# Example rules list
+rules = [
+    {"ip": "192.168.1.10", "port": 80, "protocol": "TCP"},
+    {"ip": "10.0.0.5", "port": 53, "protocol": "UDP"},
+    # Add more rules here
+]
+
     for r in rules:  # your list of firewall rules
         # Safe conversion for rule port
         try:
