@@ -46,7 +46,7 @@ def match_block(packet_info: Dict) -> bool:
         port_ok = True
         if r.get("port"):
             # match against source or dest port
-            port_ok = (int(r.get("port")) == int(packet_info.get("sport", -1))) or (int(r.get("port")) == int(packet_info.get("dport", -1)))
+            port_ok = (int(r.get("port") or -1) in [int(packet_info.get("sport", -1)), int(packet_info.get("dport", -1))])
         if ip_ok and proto_ok and port_ok:
             return True
     return False
