@@ -33,32 +33,28 @@ def remove_rule(rule_id: str) -> bool:
     return True
 
 def match_block(packet_info):
-    for r in rules:  # your list of rules
-        # Safely get rule port
-        rule_port = r.get("port")
+    for r in rules:  # your list of firewall rules
+        # Safe conversion for rule port
         try:
-            rule_port = int(rule_port)
+            rule_port = int(r.get("port"))
         except (TypeError, ValueError):
             rule_port = -1
 
-        # Safely get packet ports
-        sport = packet_info.get("sport")
-        dport = packet_info.get("dport")
-
+        # Safe conversion for packet ports
         try:
-            sport = int(sport)
+            sport = int(packet_info.get("sport", -1))
         except (TypeError, ValueError):
             sport = -1
 
         try:
-            dport = int(dport)
+            dport = int(packet_info.get("dport", -1))
         except (TypeError, ValueError):
             dport = -1
 
-        # Check if port matches
+        # Check if ports match
         port_ok = (rule_port == sport) or (rule_port == dport)
 
-        # Add any other checks (IP, protocol) if needed
+        # You can add IP/protocol checks here if needed
         if port_ok:
             return True
 
