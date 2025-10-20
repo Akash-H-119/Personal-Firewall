@@ -33,21 +33,35 @@ def remove_rule(rule_id: str) -> bool:
     return True
 
 def match_block(packet_info):
-    for r in rules:  # assuming 'rules' is your list of dicts
-        # Safely get the rule port
+    for r in rules:  # your list of rules
+        # Safely get rule port
         rule_port = r.get("port")
-        if rule_port is None:
-            rule_port = -1  # default if missing
+        try:
+            rule_port = int(rule_port)
+        except (TypeError, ValueError):
+            rule_port = -1
 
-        # Get packet source/destination ports
-        sport = packet_info.get("sport", -1)
-        dport = packet_info.get("dport", -1)
+        # Safely get packet ports
+        sport = packet_info.get("sport")
+        dport = packet_info.get("dport")
+
+        try:
+            sport = int(sport)
+        except (TypeError, ValueError):
+            sport = -1
+
+        try:
+            dport = int(dport)
+        except (TypeError, ValueError):
+            dport = -1
 
         # Check if port matches
-        port_ok = (int(rule_port) == int(sport)) or (int(rule_port) == int(dport))
+        port_ok = (rule_port == sport) or (rule_port == dport)
 
-        # You can also add IP/protocol checks here
+        # Add any other checks (IP, protocol) if needed
         if port_ok:
             return True
+
     return False
+
 
