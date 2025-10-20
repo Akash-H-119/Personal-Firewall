@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "id": "allow-1",
+      "action": "allow",
+      "ip": "192.168.1.1",
+      "port": 80,
+      "protocol": "TCP",
+      "description": "Example allow rule"
+    },
+    {
+      "id": "block-1",
+      "action": "block",
+      "ip": "192.168.1.100",
+      "port": 22,
+      "protocol": "TCP",
+      "description": "Example block rule"
+    }
+  ]
+}
