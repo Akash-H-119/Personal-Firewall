@@ -32,21 +32,22 @@ def remove_rule(rule_id: str) -> bool:
     save_rules(new)
     return True
 
-def match_block(packet_info: Dict) -> bool:
-    """
-    packet_info: {"src":..., "dst":..., "sport":..., "dport":..., "proto": "TCP"/"UDP"/"ICMP"}
-    Returns True if packet should be blocked (by rule).
-    """
-    rules = load_rules()
-    for r in rules:
-        if r.get("action", "").lower() != "block":
-            continue
-        ip_ok = (r.get("ip") == packet_info.get("src")) or (r.get("ip") == packet_info.get("dst"))
-        proto_ok = (r.get("protocol", "").upper() == packet_info.get("proto", "").upper()) if r.get("protocol") else True
-        port_ok = True
-        if r.get("port"):
-            # match against source or dest port
-            port_ok = (int(r.get("port") or -1) in [int(packet_info.get("sport", -1)), int(packet_info.get("dport", -1))])
-        if ip_ok and proto_ok and port_ok:
+def match_block(packet_info):
+    for r in rules:  # assuming 'rules' is your list of dicts
+        # Safely get the rule port
+        rule_port = r.get("port")
+        if rule_port is None:
+            rule_port = -1  # default if missing
+
+        # Get packet source/destination ports
+        sport = packet_info.get("sport", -1)
+        dport = packet_info.get("dport", -1)
+
+        # Check if port matches
+        port_ok = (int(rule_port) == int(sport)) or (int(rule_port) == int(dport))
+
+        # You can also add IP/protocol checks here
+        if port_ok:
             return True
     return False
+
