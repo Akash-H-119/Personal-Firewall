@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Personal Firewall - Web Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h1 class="mb-3">Personal Firewall — Live Monitor</h1>
+
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Add Rule</h5>
+        <form id="ruleForm">
+          <div class="mb-2"><select id="action" class="form-select"><option value="allow">Allow</option><option value="block">Block</option></select></div>
+          <div class="mb-2"><input id="ip" class="form-control" placeholder="IP (e.g. 192.168.1.100)"></div>
+          <div class="mb-2"><input id="port" class="form-control" placeholder="Port (optional)"></div>
+          <div class="mb-2"><input id="protocol" class="form-control" placeholder="Protocol (TCP/UDP)"></div>
+          <div class="mb-2"><input id="desc" class="form-control" placeholder="Description (optional)"></div>
+          <button class="btn btn-primary">Add</button>
+        </form>
+
+        <h5 class="mt-3">Rules</h5>
+        <ul id="rulesList" class="list-group"></ul>
+      </div>
+
+      <div class="col-md-6">
+        <h5>Live Packets</h5>
+        <div style="height: 60vh; overflow:auto;">
+          <table class="table table-sm table-striped">
+            <thead><tr><th>Time</th><th>Src</th><th>Dst</th><th>Proto</th><th>Ports</th><th>Action</th></tr></thead>
+            <tbody id="packets"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const socket = io();
+
+socket.on("connect", ()=> {
+  console.log("connected");
+});
+
+socket.on("packet", (info) => {
+  const tb = document.getElementById("packets");
+  const tr = document.createElement("tr");
+  const time = new Date().toLocaleTimeString();
+  const ports = (info.sport || '-') + " → " + (info.dport || '-');
+  tr.innerHTML = `<td>${time}</td><td>${info.src}</td><td>${info.dst}</td><td>${info.proto}</td><td>${ports}</td><td>${info.action}</td>`;
+  tb.prepend(tr);
+  // keep only top 200 rows
+  while (tb.children.length > 200) tb.removeChild(tb.lastChild);
+});
+
+async function loadRules(){
+  const r = await fetch('/api/rules');
+  const data = await r.json();
+  const list = document.getElementById('rulesList');
+  list.innerHTML = '';
+  data.forEach(rule=>{
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex justify-content-between align-items-start';
+    li.innerHTML = `<div><strong>${rule.action.toUpperCase()}</strong> ${rule.ip || ''} ${rule.port ? ':'+rule.port : ''} ${rule.protocol || ''}<br><small>${rule.description || ''}</small></div>
+                    <button class="btn btn-sm btn-danger" onclick="deleteRule('${rule.id}')">Delete</button>`;
+    list.appendChild(li);
+  });
+}
+
+async function deleteRule(id){
+  await fetch('/api/rules/' + id, { method: 'DELETE' });
+  loadRules();
+}
+
+document.getElementById('ruleForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    action: document.getElementById('action').value,
+    ip: document.getElementById('ip').value,
+    port: document.getElementById('port').value || null,
+    protocol: document.getElementById('protocol').value || null,
+    description: document.getElementById('desc').value || ''
+  };
+  await fetch('/api/rules', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  loadRules();
+  e.target.reset();
+});
+
+loadRules();
+</script>
+</body>
+</html>
